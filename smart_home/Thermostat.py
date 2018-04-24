@@ -2,11 +2,13 @@
 coding=utf-8
 """
 import time
+import json
 
 from . import NoDevice, postRequest, _BASE_URL
 
-_SETTEMP_REQ = _BASE_URL + "api/setthermpoint"
-_GETTHERMOSTATDATA_REQ  = _BASE_URL + "api/getthermostatsdata"
+_SETTEMP_REQ = _BASE_URL + "api/setroomthermpoint"
+_GETHOMESDATA_REQ  = _BASE_URL + "api/homesdata"
+_GETTHERMOSTATDATA_REQ  = _BASE_URL + "api/homestatus"
 
 class ThermostatData:
     """
@@ -20,38 +22,43 @@ class ThermostatData:
         postParams = {
                 "access_token" : self.getAuthToken
                 }
-        resp = postRequest(_GETTHERMOSTATDATA_REQ, postParams)
+        resp = postRequest(_GETHOMESDATA_REQ, postParams)
+
 
         self.rawData = resp['body']
-        self.devList = self.rawData['devices']
-        if not self.devList : raise NoDevice("No thermostat available")
-        self.devId = self.devList[0]['_id']
-        self.modList = self.devList[0]['modules']
-        self.modId = self.modList[0]['_id']
-        self.temp = self.modList[0]['measured']['temperature']
-        self.setpoint_temp = self.modList[0]['measured']['setpoint_temp']
-        self.setpoint_mode = self.modList[0]['setpoint']['setpoint_mode']
-        self.relay_cmd = int(self.modList[0]['therm_relay_cmd'])
-        self.devices = { d['_id'] : d for d in self.rawData['devices'] }
-        self.modules = dict()
-        self.therm_program_list = dict()
-        self.zones = dict()
-        self.timetable = dict()
-        for i in range(len(self.rawData['devices'])):
-            nameDevice=self.rawData['devices'][i]['station_name']
-            if nameDevice not in self.modules:
-                self.modules[nameDevice]=dict()
-            for m in self.rawData['devices'][i]['modules']:
-                self.modules[nameDevice][ m['_id'] ] = m
-            for p in self.rawData['devices'][i]['modules'][0]['therm_program_list']:
-                self.therm_program_list[p['program_id']] = p
-            for z in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['zones']:
-                self.zones[z['id']] = z
-            for o in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['timetable']:
-                self.timetable[o['m_offset']] = o
-        self.default_device = list(self.devices.values())[0]['station_name']
+        self.homeList = self.rawData['homes']
 
-        self.default_module = list(self.modules[self.default_device].values())[0]['module_name']
+        print json.dumps(self.homeList, sort_keys=True, indent=4);
+
+        # self.devList = self.rawData['devices']
+        # if not self.devList : raise NoDevice("No thermostat available")
+        # self.devId = self.devList[0]['_id']
+        # self.modList = self.devList[0]['modules']
+        # self.modId = self.modList[0]['_id']
+        # self.temp = self.modList[0]['measured']['temperature']
+        # self.setpoint_temp = self.modList[0]['measured']['setpoint_temp']
+        # self.setpoint_mode = self.modList[0]['setpoint']['setpoint_mode']
+        # self.relay_cmd = int(self.modList[0]['therm_relay_cmd'])
+        # self.devices = { d['_id'] : d for d in self.rawData['devices'] }
+        # self.modules = dict()
+        # self.therm_program_list = dict()
+        # self.zones = dict()
+        # self.timetable = dict()
+        # for i in range(len(self.rawData['devices'])):
+        #     nameDevice=self.rawData['devices'][i]['station_name']
+        #     if nameDevice not in self.modules:
+        #         self.modules[nameDevice]=dict()
+        #     for m in self.rawData['devices'][i]['modules']:
+        #         self.modules[nameDevice][ m['_id'] ] = m
+        #     for p in self.rawData['devices'][i]['modules'][0]['therm_program_list']:
+        #         self.therm_program_list[p['program_id']] = p
+        #     for z in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['zones']:
+        #         self.zones[z['id']] = z
+        #     for o in self.rawData['devices'][i]['modules'][0]['therm_program_list'][0]['timetable']:
+        #         self.timetable[o['m_offset']] = o
+        # self.default_device = list(self.devices.values())[0]['station_name']
+
+        # self.default_module = list(self.modules[self.default_device].values())[0]['module_name']
 
     def lastData(self, device=None, exclude=0):
         s = self.deviceByName(device)
